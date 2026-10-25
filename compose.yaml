@@ -1,0 +1,51 @@
+# Levanta PostgreSQL + migraciones + la API usando la imagen publicada en Docker Hub.
+# Lee DB_*, AWS_*, MAILER_* y DOCKER_USER de tu archivo .env (copia .env.example).
+services:
+  postgres:
+    image: postgres:16
+    container_name: aguafix-pg
+    ports:
+      - "${DB_PORT}:5432"
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - aguafix_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Corre las migraciones una vez y termina; la API espera a que acabe bien
+  migrations:
+    image: ${DOCKER_USER}/512-aguafix-smj:latest
+    container_name: aguafix-migrations
+    env_file: .env
+    environment:
+      # Dentro de la red de Docker la base se llama "postgres" y escucha en 5432
+      - DB_HOST=postgres
+      - DB_PORT=5432
+    command: ["npx", "typeorm", "-d", "dist/db/data-source.js", "migration:run"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    image: ${DOCKER_USER}/512-aguafix-smj:latest
+    container_name: aguafix-api
+    env_file: .env
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+
+volumes:
+  aguafix_db_data:

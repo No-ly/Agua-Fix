@@ -1,0 +1,26 @@
+name: Build & Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE: ${{ secrets.DOCKER_USER }}/512-aguafix-smj
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Login en Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
+
+      - name: Construir imagen
+        run: docker build -t $IMAGE:latest .
+
+      - name: Publicar imagen
+        run: docker push $IMAGE:latest

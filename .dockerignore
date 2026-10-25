@@ -1,0 +1,23 @@
+# Secretos y configuración local: NUNCA dentro de la imagen
+.env
+.env.*
+compose.yaml
+
+# Se generan dentro del contenedor
+node_modules
+dist
+# Un tsbuildinfo viejo haría que tsc crea que ya compiló y no genere dist/
+*.tsbuildinfo
+
+# Control de versiones, CI y editor
+.git
+.github
+.gitignore
+.vscode
+
+# No se necesitan para correr la API
+Dockerfile
+.dockerignore
+coverage
+test
+*.md
