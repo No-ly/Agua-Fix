@@ -6,3 +6,6 @@ import { StorageService } from './storage.service';
   exports: [StorageService],
 })
 export class StorageModule {}
+
+
+// Aguafix API 2
